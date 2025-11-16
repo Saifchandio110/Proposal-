@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Proposal</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.5s;
+        }
+        .romantic { background: linear-gradient(135deg, #ff9a9e, #fecfef, #ffecd2); }
+        .adventurous { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .minimalist { background: #f5f5f5; color: #333; }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .section {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        .section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        h1, h2 { color: #e91e63; }
+        .adventurous h1, .adventurous h2 { color: #fff; }
+        .minimalist h1, .minimalist h2 { color: #333; }
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        button:hover { background: #c2185b; }
+        .adventurous button { background: #764ba2; }
+        .minimalist button { background: #333; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .hearts { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        .heart { position: absolute; color: #ff6b9d; font-size: 2em; animation: float 8s infinite linear; }
+        @keyframes float { 0% { transform: translateY(100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; } }
+        .rose { position: absolute; font-size: 3em; animation: bloom 2s ease-in-out; }
+        @keyframes bloom { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .gallery img { max-width: 100%; height: auto; margin: 10px; border-radius: 10px; }
+        #countdown { font-size: 2em; color: #4caf50; }
+        audio { display: none; }
+    </style>
+</head>
+<body class="romantic">
+    <div class="hearts" id="hearts"></div>
+    <div class="container">
+        <!-- Options Section -->
+        <div class="section active" id="options">
+            <h1>Customize Your Proposal</h1>
+            <label>Choose Theme:</label><br>
+            <button onclick="setTheme('romantic')">Romantic</button>
+            <button onclick="setTheme('adventurous')">Adventurous</button>
+            <button onclick="setTheme('minimalist')">Minimalist</button><br><br>
+            <label><input type="checkbox" id="music"> Add Background Music</label><br>
+            <label><input type="checkbox" id="timer"> Include Countdown Timer</label><br>
+            <label><input type="checkbox" id="gallery"> Add Photo Gallery</label><br><br>
+            <button onclick="startProposal()">Start Proposal</button>
+        </div>
+
+        <!-- Intro Section -->
+        <div class="section" id="intro">
+            <h1>Hello [SAIF ALI]!</h1>
+            <p>I've prepared something special for you. Let's begin our journey...</p>
+            <button onclick="nextSection('story')">Continue</button>
+        </div>
+
+        <!-- Story Section -->
+        <div class="section" id="story">
+            <h2>Our Story</h2>
+            <textarea id="storyText" placeholder="Write a short story about your crush here...">From the first hello to endless adventures, you've been my everything. Every moment with you is a treasure.</textarea>
+            <button onclick="nextSection('gallery')">Next: Memories</button>
+        </div>
+
+        <!-- Gallery Section -->
+        <div class="section" id="gallery">
+            <h2>Memory Lane</h2>
+            <div class="gallery">
+                <img src="https://via.placeholder.com/300x200?text=Your+Photo+1" alt="Memory 1">
+                <img src="https://via.placeholder.com/300x200?text=Your+Photo+2" alt="Memory 2">
+                <!-- Replace with real image URLs -->
+            </div>
+            <button onclick="nextSection('proposal')">Next: The Big Question</button>
+        </div>
+
+        <!-- Proposal Section -->
+        <div class="section" id="proposal">
+            <h1>Dear QUEEN RAIMA,</h1>
+            <p id="message">Will you be mine forever? 💖</p>
+            <div id="countdown"></div>
+            <button onclick="acceptProposal()">Yes!</button>
+            <button onclick="rejectProposal()">No (Just Kidding!)</button>
+            <div id="response" style="display:none; margin-top:20px; font-size:1.5em; color:#4caf50;"></div>
+        </div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav"> <!-- Replace with a romantic song URL -->
+    </audio>
+
+    <script>
+        let currentSection = 'options';
+        let theme = 'romantic';
+        let musicEnabled = false;
+        let timerEnabled = false;
+        let galleryEnabled = false;
+
+        function setTheme(t) {
+            theme = t;
+            document.body.className = t;
+        }
+
+        function startProposal() {
+            musicEnabled = document.getElementById('music').checked;
+            timerEnabled = document.getElementById('timer').checked;
+            galleryEnabled = document.getElementById('gallery').checked;
+            if (musicEnabled) document.getElementById('bgMusic').play();
+            nextSection('intro');
+        }
+
+        function nextSection(next) {
+            document.getElementById(currentSection).classList.remove('active');
+            document.getElementById(next).classList.add('active');
+            currentSection = next;
+            if (next === 'proposal' && timerEnabled) startCountdown();
+            if (next === 'gallery' && !galleryEnabled) nextSection('proposal'); // Skip if not enabled
+        }
+
+        function startCountdown() {
+            let count = 10;
+            const countdownEl = document.getElementById('countdown');
+            const interval = setInterval(() => {
+                countdownEl.textContent = `Countdown: ${count}`;
+                count--;
+                if (count < 0) {
+                    clearInterval(interval);
+                    countdownEl.textContent = 'Now!';
+                }
+            }, 1000);
+        }
+
+        function acceptProposal() {
+            document.getElementById('response').textContent = 'Yay! I love you forever! 💖';
+            document.getElementById('response').style.display = 'block';
+            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
+            // Add rose animation
+            const rose = document.createElement('div');
+            rose.className = 'rose';
+            rose.innerHTML = '🌹';
+            rose.style.left = '50%';
+            rose.style.top = '50%';
+            document.body.appendChild(rose);
+            setTimeout(() => rose.remove(), 3000);
+        }
+
+        function rejectProposal() {
+            document.getElementById('response').textContent = 'Aww, but I know you\'ll say yes! 😉';
+            document.getElementById('response').style.display = 'block';
+        }
+
+        // Generate floating hearts
+        function createHearts() {
+            const heartsContainer = document.getElementById('hearts');
+            for (let i = 0; i < 30; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 8 + 's';
+                heartsContainer.appendChild(heart);
+            }
+        }
+        createHearts();
+    </script>
+</body>
+</html>
